@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Beubeuland • TikTok</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root { --orange:#f97316; --bg:#09090b; --panel:#18181b; --muted:#a1a1aa; }
+    * { box-sizing:border-box; }
+    html,body { margin:0; width:100%; height:100%; overflow:hidden; background:var(--bg); color:#fff; font-family:Inter,system-ui,-apple-system,sans-serif; }
+    button,input { font:inherit; }
+    .app { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; }
+    .topbar { width:min(100%,520px); height:48px; display:flex; align-items:center; justify-content:space-between; padding:7px 14px; flex-shrink:0; }
+    .brand { font-weight:900; font-size:19px; letter-spacing:-1px; }
+    .brand span { color:#000; background:var(--orange); border-radius:6px; padding:1px 6px; }
+    .top-actions { display:flex; gap:8px; }
+    .top-btn { display:inline-flex; align-items:center; gap:6px; color:#fff; background:#27272a; border:0; border-radius:999px; padding:8px 12px; font-size:11px; cursor:pointer; }
+    .top-btn.upload { background:var(--orange); color:#111; font-weight:800; }
+    .feed { width:min(100%,520px); flex:1; min-height:0; overflow-y:auto; scroll-snap-type:y mandatory; scrollbar-width:none; background:#000; }
+    .feed::-webkit-scrollbar { display:none; }
+    .slide { position:relative; width:100%; height:100%; min-height:100%; scroll-snap-align:start; scroll-snap-stop:always; overflow:hidden; background:#000; }
+    video { width:100%; height:100%; object-fit:cover; display:block; background:#000; }
+    .shade { pointer-events:none; position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,.82),transparent 40%,rgba(0,0,0,.18)); }
+    .info { position:absolute; left:16px; right:24px; bottom:78px; z-index:3; text-shadow:0 1px 5px #000; }
+    .info h2 { margin:0 0 5px; font-size:18px; }
+    .info p { margin:0; color:#ddd; font-size:13px; }
+    .controls { position:absolute; left:12px; right:12px; bottom:14px; z-index:4; display:flex; align-items:center; gap:9px; }
+    .control-btn { width:34px; height:34px; border:0; border-radius:50%; display:grid; place-items:center; background:rgba(255,255,255,.2); color:#fff; cursor:pointer; }
+    .progress { flex:1; height:4px; border-radius:4px; background:rgba(255,255,255,.3); overflow:hidden; cursor:pointer; }
+    .progress i { display:block; width:0; height:100%; background:#fff; }
+    .time { min-width:72px; color:#eee; font-size:11px; text-align:right; font-variant-numeric:tabular-nums; }
+    .locked video { filter:blur(23px) brightness(.35); transform:scale(1.08); }
+    .locked .info,.locked .controls { opacity:.12; }
+    .lock-layer { position:absolute; inset:0; z-index:5; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center; background:rgba(0,0,0,.25); }
+    .lock-card { width:min(330px,100%); padding:26px 20px; border-radius:24px; background:rgba(18,18,20,.9); border:1px solid rgba(255,255,255,.14); backdrop-filter:blur(13px); box-shadow:0 15px 60px #0008; }
+    .lock-card i { color:var(--orange); font-size:31px; margin-bottom:12px; }
+    .lock-card h2 { margin:0 0 8px; font-size:19px; }
+    .lock-card p { margin:0 0 17px; color:var(--muted); font-size:12px; line-height:1.5; }
+    .orange-btn { width:100%; display:inline-flex; justify-content:center; align-items:center; gap:8px; padding:12px 16px; border:0; border-radius:12px; background:var(--orange); color:#111; font-size:13px; font-weight:800; cursor:pointer; text-decoration:none; }
+    .paywall { position:fixed; inset:0; z-index:20; display:none; align-items:center; justify-content:center; padding:20px; background:#000b; backdrop-filter:blur(8px); }
+    .paywall.show { display:flex; }
+    .pay-box { width:min(390px,100%); padding:30px 22px; border:1px solid #3f3f46; border-radius:24px; background:var(--panel); text-align:center; }
+    .pay-box .icon { color:var(--orange); font-size:35px; }
+    .pay-box h2 { margin:10px 0 8px; }
+    .pay-box p { color:var(--muted); font-size:13px; line-height:1.5; margin:0 0 20px; }
+    .close { display:block; margin:14px auto 0; border:0; background:none; color:#71717a; cursor:pointer; font-size:12px; }
+    .modal { position:fixed; inset:0; z-index:30; display:none; align-items:center; justify-content:center; padding:20px; background:#000b; backdrop-filter:blur(6px); }
+    .modal.show { display:flex; }
+    .modal-box { width:min(410px,100%); padding:22px; border-radius:20px; background:var(--panel); border:1px solid #3f3f46; }
+    .modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:17px; }
+    .modal-head h2 { margin:0; font-size:17px; }
+    .x { border:0; background:none; color:#aaa; cursor:pointer; font-size:16px; }
+    label { display:block; color:var(--muted); font-size:11px; margin:12px 0 6px; }
+    input[type=text],input[type=file] { width:100%; padding:12px; border:1px solid #3f3f46; border-radius:11px; background:#0f0f11; color:#fff; }
+    .hint { color:#71717a; font-size:11px; line-height:1.45; margin:13px 0 0; }
+    @media (min-width:600px) { .feed { border-left:8px solid #18181b; border-right:8px solid #18181b; border-radius:28px 28px 0 0; } }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">beubeu<span>land</span></div>
+    <div class="top-actions">
+      <button class="top-btn upload" id="uploadBtn"><i class="fa-solid fa-upload"></i> Upload</button>
+      <button class="top-btn" id="discordBtn"><i class="fa-brands fa-discord"></i> Discord</button>
+    </div>
+  </header>
+
+  <main class="feed" id="feed"></main>
+</div>
+
+<div class="paywall" id="paywall" role="dialog" aria-modal="true">
+  <div class="pay-box">
+    <div class="icon"><i class="fa-solid fa-lock"></i></div>
+    <h2>Débloque Beubeuland</h2>
+    <p>Tu as regardé les 2 vidéos gratuites. Abonne-toi pour accéder à tout le feed.</p>
+    <!-- Remplace cette URL par ton lien Stripe Checkout -->
+    <button class="orange-btn" id="subscribeBtn" type="button"><i class="fa-solid fa-credit-card"></i> S'abonner maintenant</button>
+    <button class="close" id="closePaywall">Continuer à regarder les aperçus</button>
+  </div>
+</div>
+
+<div class="modal" id="uploadModal" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-head"><h2><i class="fa-solid fa-cloud-arrow-up" style="color:#f97316"></i> Uploader une vidéo</h2><button class="x" id="closeUpload"><i class="fa-solid fa-xmark"></i></button></div>
+    <label for="videoTitle">Titre</label>
+    <input id="videoTitle" type="text" placeholder="Titre de la vidéo">
+    <label for="videoFile">Fichier vidéo</label>
+    <input id="videoFile" type="file" accept="video/*">
+    <video id="uploadPreview" controls playsinline style="display:none;width:100%;max-height:180px;object-fit:contain;background:#000;border-radius:12px;margin-top:12px"></video>
+    <button class="orange-btn" style="margin-top:17px" id="prepareUpload"><i class="fa-solid fa-copy"></i> Préparer l'upload</button>
+    <p class="hint" id="uploadResult">Choisis une vidéo pour la prévisualiser. Pour une mise en ligne réelle, envoie-la vers Cloudflare R2 puis ajoute son URL dans videos.json.</p>
+    <button class="close" id="downloadJson" type="button" style="display:none;color:#f97316">Télécharger le JSON généré</button>
+  </div>
+</div>
+
+<script>
+  const FREE_LIMIT = 2;
+  const sampleVideos = [
+    { title:'Bienvenue sur Beubeuland', description:'Les premières vidéos sont gratuites.', src:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4' },
+    { title:'Découvre le feed', description:'Fais défiler pour regarder la suite.', src:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4' },
+    { title:'Vidéo réservée #1', description:'Contenu premium Beubeuland.', src:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4' },
+    { title:'Vidéo réservée #2', description:'Abonne-toi pour continuer.', src:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4' }
+  ];
+  const feed = document.getElementById('feed');
+  const paywall = document.getElementById('paywall');
+
+  function time(s) { if (!isFinite(s)) return '0:00'; return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'); }
+  function openPaywall() { paywall.classList.add('show'); }
+  function closePaywall() { paywall.classList.remove('show'); }
+
+  sampleVideos.forEach((item,index) => {
+    const slide = document.createElement('article');
+    slide.className = 'slide' + (index >= FREE_LIMIT ? ' locked' : '');
+    slide.innerHTML = `
+      <video playsinline loop preload="metadata" src="${item.src}"></video>
+      <div class="shade"></div>
+      <div class="info"><h2>${item.title}</h2><p>${item.description}</p></div>
+      <div class="controls">
+        <button class="control-btn play"><i class="fa-solid fa-play"></i></button>
+        <div class="progress"><i></i></div>
+        <span class="time">0:00 / 0:00</span>
+        <button class="control-btn mute"><i class="fa-solid fa-volume-xmark"></i></button>
+      </div>`;
+    if (index >= FREE_LIMIT) {
+      slide.querySelector('video').removeAttribute('src');
+      const lock = document.createElement('div');
+      lock.className = 'lock-layer';
+      lock.innerHTML = `<div class="lock-card"><i class="fa-solid fa-lock"></i><h2>Contenu réservé</h2><p>Les 2 premières vidéos sont gratuites. Abonne-toi pour continuer à regarder.</p><button class="orange-btn unlock"><i class="fa-solid fa-unlock"></i> Débloquer les vidéos</button></div>`;
+      lock.querySelector('.unlock').onclick = openPaywall;
+      slide.appendChild(lock);
+    }
+    const video = slide.querySelector('video');
+    const play = slide.querySelector('.play');
+    const mute = slide.querySelector('.mute');
+    const bar = slide.querySelector('.progress');
+    const fill = slide.querySelector('.progress i');
+    const display = slide.querySelector('.time');
+    if (index < FREE_LIMIT) {
+      play.onclick = () => video.paused ? video.play() : video.pause();
+      mute.onclick = () => { video.muted = !video.muted; mute.innerHTML = `<i class="fa-solid fa-volume-${video.muted ? 'xmark':'high'}"></i>`; };
+      video.onplay = () => play.innerHTML='<i class="fa-solid fa-pause"></i>';
+      video.onpause = () => play.innerHTML='<i class="fa-solid fa-play"></i>';
+      video.ontimeupdate = () => { if(video.duration) fill.style.width=(video.currentTime/video.duration*100)+'%'; display.textContent=time(video.currentTime)+' / '+time(video.duration); };
+      video.onloadedmetadata = () => display.textContent='0:00 / '+time(video.duration);
+      bar.onclick = e => { if(video.duration) video.currentTime=((e.clientX-bar.getBoundingClientRect().left)/bar.offsetWidth)*video.duration; };
+      video.addEventListener('click', () => video.paused ? video.play().catch(()=>{}) : video.pause());
+    }
+    feed.appendChild(slide);
+  });
+
+  const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+    const video = entry.target.querySelector('video');
+    if (!video || entry.target.classList.contains('locked')) return;
+    if (entry.isIntersecting && entry.intersectionRatio >= .65) video.play().catch(()=>{});
+    else video.pause();
+  }), { root:feed, threshold:[.65] });
+  document.querySelectorAll('.slide').forEach(s => observer.observe(s));
+
+  document.getElementById('closePaywall').onclick = closePaywall;
+  document.getElementById('discordBtn').onclick = () => window.open('https://discord.gg/a2HexAGYK','_blank','noopener');
+  const modal = document.getElementById('uploadModal');
+  document.getElementById('uploadBtn').onclick = () => modal.classList.add('show');
+  document.getElementById('closeUpload').onclick = () => modal.classList.remove('show');
+  modal.onclick = e => { if(e.target === modal) modal.classList.remove('show'); };
+  const fileInput = document.getElementById('videoFile');
+  const uploadPreview = document.getElementById('uploadPreview');
+  const jsonButton = document.getElementById('downloadJson');
+  let selectedFileUrl = '';
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    if (selectedFileUrl) URL.revokeObjectURL(selectedFileUrl);
+    selectedFileUrl = URL.createObjectURL(file);
+    uploadPreview.src = selectedFileUrl;
+    uploadPreview.style.display = 'block';
+  });
+  document.getElementById('prepareUpload').onclick = () => {
+    const file = fileInput.files[0];
+    const title = document.getElementById('videoTitle').value.trim();
+    const result = document.getElementById('uploadResult');
+    if (!file || !title) { result.textContent='Indique un titre et sélectionne une vidéo.'; result.style.color='#fb923c'; return; }
+    const entry = { id: Date.now(), title, description:'', videoUrl:'A_REMPLACER_PAR_URL_R2/'+file.name, fileType:file.type || 'video/mp4', authorId:'admin', authorName:'Beubeuland', created_at:new Date().toISOString() };
+    const json = JSON.stringify(entry, null, 2) + ',';
+    jsonButton.style.display='block';
+    jsonButton.onclick = () => {
+      const blob = new Blob([json], {type:'application/json'});
+      const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='video-entry.json'; a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    };
+    result.textContent = `Vidéo prête : ${file.name}. Le JSON peut maintenant être téléchargé puis ajouté à videos.json.`;
+    result.style.color='#86efac';
+  };
+  document.getElementById('subscribeBtn').onclick = () => {
+    const stripeUrl = 'https://buy.stripe.com/5kQ8wOfWE97A4W7gjcew80s';
+    if (stripeUrl.includes('REMPLACE')) alert('Remplace d’abord le lien Stripe dans le fichier HTML.');
+    else window.open(stripeUrl, '_blank', 'noopener');
+  };
+  document.addEventListener('keydown', e => { if(e.key==='Escape'){closePaywall(); modal.classList.remove('show');} });
+</script>
+</body>
+</html>
