@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Beubeu-land</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    tailwind.config = { theme: { extend: { colors: { brand: '#f97316' } } } }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <!-- Dynamic main area -->
+    <main id="main"></main>
+
+    <!-- Bottom navigation -->
+    <nav id="bottom-nav" class="hidden">
+      <button class="nav-item active" data-hash="feed"><i class="fas fa-home"></i><span>Accueil</span></button>
+      <button class="nav-item" data-hash="search"><i class="fas fa-search"></i><span>Recherche</span></button>
+      <button class="nav-item" data-hash="upload"><i class="fas fa-plus-square"></i><span>Publier</span></button>
+      <button class="nav-item" data-hash="messages"><i class="fas fa-comment-dots"></i><span>Messages</span></button>
+      <button class="nav-item" data-hash="profile"><i class="fas fa-user"></i><span>Profil</span></button>
+    </nav>
+  </div>
+
+  <!-- Premium Modal -->
+  <div id="premium-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3><i class="fas fa-crown text-yellow-400 mr-2"></i>Contenu Premium</h3>
+        <button class="modal-close" onclick="app.closePremiumModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body premium-modal-content">
+        <div class="icon"><i class="fas fa-lock"></i></div>
+        <h2>Vous avez atteint votre limite de vidéos gratuites.</h2>
+        <p>Abonnez-vous pour <strong>20 € / mois</strong> et débloquez toutes les fonctionnalités.</p>
+        <ul>
+          <li>✅ Vidéos illimitées</li>
+          <li>✅ Création complète de votre profil</li>
+          <li>✅ Messages privés illimités</li>
+          <li> Publication de 3 vidéos par jour</li>
+          <li> Favoris, playlists, historique</li>
+          <li>✅ Statistiques créateur</li>
+        </ul>
+        <div class="price">20 €<span class="text-lg font-medium text-muted"> / mois</span></div>
+        <div class="price-sub">Sans engagement, annulation à tout moment.</div>
+        <button class="btn btn-primary btn-block" onclick="app.subscribePremium()">S'abonner maintenant</button>
+        <button class="btn btn-ghost btn-block mt-2" onclick="app.closePremiumModal()">Continuer gratuitement</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comments Modal -->
+  <div id="comments-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3><i class="fas fa-comments text-brand mr-2"></i>Commentaires</h3>
+        <button class="modal-close" onclick="app.closeComments()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body" style="padding:0; display:flex; flex-direction:column; height:50vh;">
+        <div id="comments-list" class="p-4" style="flex:1; overflow-y:auto;"></div>
+        <div id="comments-form" class="p-3 border-t border-zinc-700 flex gap-2">
+          <input id="comment-input" type="text" class="form-input" placeholder="Ajouter un commentaire..." onkeydown="if(event.key==='Enter') app.submitComment()">
+          <button class="btn btn-primary btn-sm" onclick="app.submitComment()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Edit Modal -->
+  <div id="profile-edit-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3><i class="fas fa-user-edit text-brand mr-2"></i>Modifier le profil</h3>
+        <button class="modal-close" onclick="app.closeProfileEdit()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Photo de profil</label>
+          <input type="file" id="edit-avatar" accept="image/*" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bannière</label>
+          <input type="file" id="edit-banner" accept="image/*" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pseudo</label>
+          <input type="text" id="edit-pseudo" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bio</label>
+          <textarea id="edit-bio" class="form-textarea"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Lien</label>
+          <input type="text" id="edit-link" class="form-input">
+        </div>
+        <button class="btn btn-primary btn-block" onclick="app.saveProfileEdit()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-zinc-800 text-white px-4 py-2 rounded-full text-sm shadow-lg opacity-0 pointer-events-none transition-opacity duration-300 z-[200]"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
